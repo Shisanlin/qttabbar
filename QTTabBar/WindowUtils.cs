@@ -35,49 +35,40 @@ namespace QTTabBarLib {
             ForceSetForegroundWindow(hwndExplr);
         }
 
+        // SetWindowPos 标志与特殊 hWnd 值
+        private const int HWND_TOPMOST = -1;
+        private const int HWND_NOTOPMOST = -2;
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOMOVE = 0x0002;
+        private const uint SWP_NOACTIVATE = 0x0010;
+        private const uint SWP_SHOWWINDOW = 0x0040;
+
         /// <summary>
-        /// 强制将窗口设为前台，绕过 Windows 对 SetForegroundWindow 的限制。
-        /// 通过 AttachThreadInput 临时关联当前线程和前台窗口线程的输入队列，
-        /// 使 SetForegroundWindow 能够可靠工作。
+        /// 将窗口设为前台。
+        /// 注意：刻意不使用跨进程 AttachThreadInput——该 API 会临时合并不同进程的
+        /// 输入队列，即使正确分离也可能破坏前台/激活状态，导致随后原生的任务栏
+        /// 最小化-恢复失效。这里改用"置顶再取消置顶"的方式把窗口提到前台，无副作用。
         /// </summary>
         public static void ForceSetForegroundWindow(IntPtr hwnd) {
-            IntPtr hwndForeground = PInvoke.GetForegroundWindow();
-            if (hwnd == hwndForeground) return;
+            if (hwnd == IntPtr.Zero) return;
 
-            int currentThreadId = PInvoke.GetCurrentThreadId();
-            uint dummy;
-            int foregroundThreadId = PInvoke.GetWindowThreadProcessId(hwndForeground, out dummy);
-            int targetThreadId = PInvoke.GetWindowThreadProcessId(hwnd, out dummy);
-
-            bool attached = false;
-            try {
-                // 将当前线程的输入附加到前台窗口的线程
-                if (currentThreadId != foregroundThreadId) {
-                    attached = PInvoke.AttachThreadInput(currentThreadId, foregroundThreadId, true);
-                }
-                // 如果目标线程不同于前台线程，也要附加
-                bool attachedTarget = false;
-                if (targetThreadId != currentThreadId && targetThreadId != foregroundThreadId) {
-                    attachedTarget = PInvoke.AttachThreadInput(targetThreadId, currentThreadId, true);
-                }
-
-                // 现在 SetForegroundWindow 应该能正常工作
-                PInvoke.SetForegroundWindow(hwnd);
-                // 备用：如果 SetForegroundWindow 仍然失败，使用 BringWindowToTop
-                if (PInvoke.GetForegroundWindow() != hwnd) {
-                    PInvoke.BringWindowToTop(hwnd);
-                    PInvoke.SetForegroundWindow(hwnd);
-                }
-
-                if (attachedTarget) {
-                    PInvoke.AttachThreadInput(targetThreadId, currentThreadId, false);
-                }
+            // 若窗口处于最小化，先恢复
+            if (PInvoke.IsIconic(hwnd)) {
+                PInvoke.ShowWindow(hwnd, 9); // SW_RESTORE
             }
-            finally {
-                if (attached) {
-                    PInvoke.AttachThreadInput(currentThreadId, foregroundThreadId, false);
-                }
-            }
+
+            if (hwnd == PInvoke.GetForegroundWindow()) return;
+
+            // 先直接尝试
+            PInvoke.SetForegroundWindow(hwnd);
+            if (hwnd == PInvoke.GetForegroundWindow()) return;
+
+            // 备用：通过短暂置顶把窗口提到最前，再恢复正常 Z 序。
+            // 这种方式不触碰输入队列，不会产生跨进程副作用。
+            PInvoke.SetWindowPos(hwnd, (IntPtr)HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+            PInvoke.SetWindowPos(hwnd, (IntPtr)HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+            PInvoke.BringWindowToTop(hwnd);
+            PInvoke.SetForegroundWindow(hwnd);
         }
 
         // �ر���Դ�����������͹ر���Ϣ

@@ -87,6 +87,8 @@ namespace QTTabBarLib.Interop {
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool FreeLibrary(IntPtr hModule);
         [DllImport("user32.dll")]
+        public static extern bool AllowSetForegroundWindow(uint dwProcessId);
+        [DllImport("user32.dll")]
         public static extern IntPtr GetAncestor(IntPtr hwnd, int gaFlags);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
