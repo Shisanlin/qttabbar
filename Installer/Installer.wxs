@@ -267,11 +267,11 @@ Language="1033"
                                         <RegistryValue Name="Class" Value="QTTabBarLib.$(var.compName)" Type="string" Action="write" />
                                         <RegistryValue Name="Assembly" Value="$(var.StrongName)" Type="string" Action="write" />
                                          <!--- v2.0.50727 v4.0.30319 --> 
-                                        <RegistryValue Name="RuntimeVersion" Value="v2.0.50727" Type="string" Action="write" />
+                                        <RegistryValue Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
                                         <RegistryKey Key="$(var.ProductVersion)" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
                                             <RegistryValue Name="Class" Value="QTTabBarLib.$(var.compName)" Type="string" Action="write" />
                                             <RegistryValue Name="Assembly" Value="$(var.StrongName)" Type="string" Action="write" />
-                                            <RegistryValue Name="RuntimeVersion" Value="v2.0.50727" Type="string" Action="write" />
+                                            <RegistryValue Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
                                         </RegistryKey>
                                     </RegistryKey>
                                 </RegistryKey>

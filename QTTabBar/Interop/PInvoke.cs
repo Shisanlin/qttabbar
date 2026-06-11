@@ -35,6 +35,8 @@ namespace QTTabBarLib.Interop {
         [DllImport("gdi32.dll")]
         public static extern bool BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, uint dwRop);
         [DllImport("user32.dll")]
+        public static extern bool BringWindowToTop(IntPtr hWnd);
+        [DllImport("user32.dll")]
         public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll")]
         public static extern bool ClientToScreen(IntPtr hwnd, ref Point lpPoint);
@@ -104,6 +106,8 @@ namespace QTTabBarLib.Interop {
         [DllImport("kernel32.dll")]
         public static extern int GetCurrentThreadId();
         [DllImport("user32.dll")]
+        public static extern bool AttachThreadInput(int idAttach, int idAttachTo, bool fAttach);
+        [DllImport("user32.dll")]
         public static extern IntPtr GetCursor();
         [DllImport("user32.dll")]
         public static extern IntPtr GetDC(IntPtr hWnd);
@@ -169,7 +173,7 @@ namespace QTTabBarLib.Interop {
         [DllImport("user32.dll")]
         public static extern int GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
         /// <summary>
-        /// 打开进程
+        /// 锟津开斤拷锟斤拷
         /// </summary>
         /// <param name="dwDesiredAccess"></param>
         /// <param name="bInheritHandle"></param>
