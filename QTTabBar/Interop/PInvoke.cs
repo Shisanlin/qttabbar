@@ -35,6 +35,8 @@ namespace QTTabBarLib.Interop {
         [DllImport("gdi32.dll")]
         public static extern bool BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, uint dwRop);
         [DllImport("user32.dll")]
+        public static extern bool BringWindowToTop(IntPtr hWnd);
+        [DllImport("user32.dll")]
         public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll")]
         public static extern bool ClientToScreen(IntPtr hwnd, ref Point lpPoint);
@@ -85,6 +87,8 @@ namespace QTTabBarLib.Interop {
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool FreeLibrary(IntPtr hModule);
         [DllImport("user32.dll")]
+        public static extern bool AllowSetForegroundWindow(uint dwProcessId);
+        [DllImport("user32.dll")]
         public static extern IntPtr GetAncestor(IntPtr hwnd, int gaFlags);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
@@ -103,6 +107,14 @@ namespace QTTabBarLib.Interop {
         public static extern uint GetCurrentProcessId();
         [DllImport("kernel32.dll")]
         public static extern int GetCurrentThreadId();
+        [DllImport("user32.dll")]
+        public static extern bool AttachThreadInput(int idAttach, int idAttachTo, bool fAttach);
+        // WinEvent 钩子相关：用于在窗口自己的线程上监听前台变化，兜底处理任务栏恢复失败
+        public delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+        [DllImport("user32.dll")]
+        public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+        [DllImport("user32.dll")]
+        public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
         [DllImport("user32.dll")]
         public static extern IntPtr GetCursor();
         [DllImport("user32.dll")]
@@ -169,7 +181,7 @@ namespace QTTabBarLib.Interop {
         [DllImport("user32.dll")]
         public static extern int GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
         /// <summary>
-        /// �򿪽���
+        /// �򿪽���
         /// </summary>
         /// <param name="dwDesiredAccess"></param>
         /// <param name="bInheritHandle"></param>

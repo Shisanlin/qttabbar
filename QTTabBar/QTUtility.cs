@@ -43,6 +43,8 @@ namespace QTTabBarLib {
     internal static class QTUtility {
         // 1.5.6.1  edit this 
         internal static readonly Version BetaRevision = new Version(1, 0); // 主版本 beta  次版本 alpha
+        // 内嵌程序集缓存，确保同一程序集只通过 Assembly.Load(byte[]) 加载一次
+        private static readonly Dictionary<string, Assembly> embeddedAssemblyCache = new Dictionary<string, Assembly>();
         internal static readonly Version CurrentVersion = new Version(1, 5, 6, 0);
         internal static readonly string BuildVerion = "build03";
         internal const int FIRST_MOUSE_ONLY_ACTION = 1000;
@@ -175,14 +177,26 @@ namespace QTTabBarLib {
             }
 
             // Register a callback for AssemblyResolve in order to load embedded assemblies.
+            // 缓存已加载的内嵌程序集，避免每次 AssemblyResolve 触发时重复调用
+            // Assembly.Load(byte[])。在 .NET 4+ 中，重复加载同一字节数组会产生多个
+            // 独立标识的程序集实例，导致同名类型无法互相转换（如 TreeListView 强转失败）。
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
-                String resourceName = "QTTabBarLib.Resources." + new AssemblyName(args.Name).Name + ".dll";
-                using(var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)) {
-                    if(stream == null) return null;
-                    byte[] assemblyData = new byte[stream.Length];
-                    stream.Read(assemblyData, 0, assemblyData.Length);
-                    QTUtility2.Close(stream);
-                    return Assembly.Load(assemblyData);
+                String assemblyShortName = new AssemblyName(args.Name).Name;
+                lock(embeddedAssemblyCache) {
+                    Assembly cached;
+                    if(embeddedAssemblyCache.TryGetValue(assemblyShortName, out cached)) {
+                        return cached;
+                    }
+                    String resourceName = "QTTabBarLib.Resources." + assemblyShortName + ".dll";
+                    using(var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)) {
+                        if(stream == null) return null;
+                        byte[] assemblyData = new byte[stream.Length];
+                        stream.Read(assemblyData, 0, assemblyData.Length);
+                        QTUtility2.Close(stream);
+                        Assembly loaded = Assembly.Load(assemblyData);
+                        embeddedAssemblyCache[assemblyShortName] = loaded;
+                        return loaded;
+                    }
                 }
             };
 

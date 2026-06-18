@@ -94,7 +94,10 @@ namespace QTTabBarLib
             CreateNotifyIcon();
             dicNotifyIcon[tabBarHandle] = new Instance
             {
-                ShowWindowCode = PInvoke.IsZoomed(explorerHandle) ? 3 : 1,
+                // 保存恢复时需要使用的 ShowWindow 命令:
+                // 最大化 -> SW_SHOWMAXIMIZED(3), 普通/最小化 -> SW_RESTORE(9)
+                // 使用 SW_RESTORE 而非 SW_SHOWNORMAL 以确保从最小化状态可靠恢复
+                ShowWindowCode = PInvoke.IsZoomed(explorerHandle) ? 3 : 9,
                 CurrentPath = currentPath,
                 ExplorerHandle = explorerHandle,
                 TabBarHandle = tabBarHandle,
@@ -174,7 +177,8 @@ namespace QTTabBarLib
                     dicNotifyIcon.Remove(tabBarHandle);
                     o.AddTab(inst.ExplorerHandle);
                     PInvoke.ShowWindow(inst.ExplorerHandle, inst.ShowWindowCode);
-                    PInvoke.SetForegroundWindow(inst.ExplorerHandle);
+                    // 使用 ForceSetForegroundWindow 确保窗口可靠地被激活到前台
+                    WindowUtils.ForceSetForegroundWindow(inst.ExplorerHandle);
                     notifyIcon.Visible = dicNotifyIcon.Count > 0;
                 }
                 else
